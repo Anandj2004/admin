@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Complaint Management</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+
+  <!-- Header -->
+  <h1 class="text-3xl font-bold text-blue-700 mb-8">Smart Complaint Management</h1>
+
+  <!-- Department Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl px-4">
+    <div onclick="openAuthModal('Water')" class="cursor-pointer bg-blue-200 hover:bg-blue-300 p-6 rounded-2xl shadow-lg text-center">
+      <h2 class="text-xl font-semibold">Water Department</h2>
+    </div>
+    <div onclick="openAuthModal('Electricity')" class="cursor-pointer bg-yellow-200 hover:bg-yellow-300 p-6 rounded-2xl shadow-lg text-center">
+      <h2 class="text-xl font-semibold">Electricity Department</h2>
+    </div>
+    <div onclick="openAuthModal('Road')" class="cursor-pointer bg-green-200 hover:bg-green-300 p-6 rounded-2xl shadow-lg text-center">
+      <h2 class="text-xl font-semibold">Road Department</h2>
+    </div>
+    <div onclick="openAuthModal('Drainage')" class="cursor-pointer bg-purple-200 hover:bg-purple-300 p-6 rounded-2xl shadow-lg text-center">
+      <h2 class="text-xl font-semibold">Drainage Department</h2>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="authModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-lg p-8 w-96">
+      <h2 id="modalTitle" class="text-2xl font-bold mb-4 text-center"></h2>
+      <input id="email" type="email" placeholder="Email" class="w-full mb-3 px-3 py-2 border rounded-lg">
+      <input id="password" type="password" placeholder="Password" class="w-full mb-3 px-3 py-2 border rounded-lg">
+      <div class="flex justify-center mb-4">
+        <button onclick="loginUser()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">Login</button>
+      </div>
+      <p id="authMessage" class="text-center text-red-500"></p>
+      <button onclick="closeAuthModal()" class="mt-4 text-sm text-gray-500 underline w-full">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // Supabase initialization (old anon + url)
+    const SUPABASE_URL = "https://slssmyaukmzvzysjxjjc.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsc3NteWF1a216dnp5c2p4ampjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5MTY3NDksImV4cCI6MjA3MjQ5Mjc0OX0.bzXDMjBMriqTaGfXc4muyldJ1qDi4Q7KJyHntCbpkzo";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let selectedDepartment = "";
+
+    function openAuthModal(dept) {
+      selectedDepartment = dept;
+      document.getElementById("modalTitle").innerText = dept + " - Login";
+      document.getElementById("authModal").classList.remove("hidden");
+    }
+
+    function closeAuthModal() {
+      document.getElementById("authModal").classList.add("hidden");
+    }
+
+    async function loginUser() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        document.getElementById("authMessage").innerText = "Invalid login credentials!";
+      } else {
+        let { data: userDept, error: deptError } = await supabaseClient
+          .from("users_info")
+          .select("department")
+          .eq("email", email)
+          .single();
+
+        if (deptError || !userDept) {
+          document.getElementById("authMessage").innerText = "No department assigned!";
+          return;
+        }
+
+        // Redirect based on department
+        if (userDept.department === "Water") window.location.href = "admin-water.html";
+        else if (userDept.department === "Electricity") window.location.href = "admin-electricity.html";
+        else if (userDept.department === "Road") window.location.href = "admin-roads.html";
+        else if (userDept.department === "Drainage") window.location.href = "admin-Drainage.html";
+        else document.getElementById("authMessage").innerText = "";
+      }
+    }
+  </script>
+</body>
+</html>
